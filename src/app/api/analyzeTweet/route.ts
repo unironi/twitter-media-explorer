@@ -23,156 +23,14 @@ function extractTweetId(url: string): string | null {
     return null;
   }
 }
-// export async function POST(req: NextRequest) {
-//   try {
-//     const body = await req.json();
-
-//     // checking if url is syntactically correct
-//     const rawUrl = urlValid(body);
-
-//     if (!rawUrl) {
-//       return NextResponse.json(
-//         { error: "tweetUrl is required" },
-//         { status: 400 }
-//       );
-//     }
-
-//     // checking if the URL contains a tweet ID
-//     const tweetId = extractTweetId(rawUrl);
-
-//     if (!tweetId) {
-//       return NextResponse.json(
-//         { error: "Invalid Twitter/X URL" },
-//         { status: 400 }
-//       );
-//     }
-
-//     console.log(`\n=== Processing Tweet ID: ${tweetId} ===`);
-
-//     // check if tweet exists (first in cache- otherwise fetch)
-//     let tweet = getCachedTweet(tweetId);
-
-//     if (!tweet) {
-//       console.log('Tweet not in cache, fetching from API...');
-//       try {
-//         tweet = await twitterClient.getTweetById(tweetId);
-//         if (tweet) {
-//           setCachedTweet(tweetId, tweet);
-//           console.log('✓ Tweet fetched and cached');
-//         } else {
-//           return NextResponse.json(
-//             { error: "Tweet not found or unavailable" },
-//             { status: 404 }
-//           );
-//         }
-//       } catch (apiError: any) {
-//         console.error('Error fetching tweet:', apiError.message);
-        
-//         // Return more specific error messages
-//         if (apiError.message.includes('Rate limit')) {
-//           return NextResponse.json(
-//             { error: "Rate limit reached. Please wait a few minutes and try again." },
-//             { status: 429 }
-//           );
-//         } else if (apiError.message.includes('not found') || apiError.message.includes('404')) {
-//           return NextResponse.json(
-//             { error: "Tweet not found. It may have been deleted or is private." },
-//             { status: 404 }
-//           );
-//         } else if (apiError.message.includes('authentication') || apiError.message.includes('401') || apiError.message.includes('403')) {
-//           return NextResponse.json(
-//             { error: "API authentication error. Please contact support." },
-//             { status: 500 }
-//           );
-//         } else {
-//           return NextResponse.json(
-//             { error: `Failed to fetch tweet: ${apiError.message}` },
-//             { status: 500 }
-//           );
-//         }
-//       }
-//     } else {
-//       console.log('✓ Tweet found in cache');
-//     }
-
-//     // check if the tweet has retweeters
-//     let retweeters = getCachedRetweeters(tweetId);
-
-//     if (!retweeters) {
-//       console.log('Retweeters not in cache, fetching from API...');
-//       try {
-//         retweeters = await twitterClient.getRetweeters(tweetId);
-//         retweeters = retweeters ? retweeters : [];
-//         setCachedRetweeters(tweetId, retweeters);
-//         console.log(`✓ Found ${retweeters.length} retweeters`);
-//       } catch (apiError: any) {
-//         console.error('Error fetching retweeters:', apiError.message);
-//         // Continue with empty retweeters array instead of failing
-//         retweeters = [];
-//       }
-//     } else {
-//       console.log(`✓ Found ${retweeters.length} retweeters in cache`);
-//     }
-
-//     // grab 5-10 random users from retweets
-//     const sampledUsers = retweeters.length > 0 ? sampleUsers(retweeters) : [];
-//     console.log(`Sampling ${sampledUsers.length} users`);
-
-//     // grab recent posts of sampled retweeters
-//     const feeds: UserAndMedia[] = [];
-
-//     for (const user of sampledUsers) {
-//       try {
-//         console.log(`\nFetching feed for @${user.username}...`);
-//         const feed = await twitterClient.getUserTweets(
-//           user.id,
-//           user.username,
-//           100,
-//           9
-//         );
-
-//         if (feed.media.length > 0) {
-//           feeds.push(feed);
-//           console.log(`✓ Added ${feed.media.length} media items from @${user.username}`);
-//         } else {
-//           console.warn(`⚠️ User @${user.username} has no media`);
-//         }
-//       } catch (err: any) {
-//         // Gracefully skip private / suspended / failed users
-//         console.warn(`⚠️ Skipping user @${user.username}: ${err.message}`);
-//       }
-//     }
-
-//     console.log(`\n=== Final Results ===`);
-//     console.log(`Total feeds with media: ${feeds.length}`);
-//     console.log(`Total media items: ${feeds.reduce((sum, f) => sum + f.media.length, 0)}`);
-
-//     return NextResponse.json({
-//       success: true,
-//       tweet,
-//       retweeterCount: retweeters.length,
-//       sampledUserCount: sampledUsers.length,
-//       feeds,
-//     });
-//   } catch (err: any) {
-//     console.error('Unhandled error in route handler:', err);
-
-//     if (typeof err.message === "string" && err.message.includes("Too Many Requests")) {
-//       return NextResponse.json(
-//         { error: "Rate limit reached. Please wait a few seconds and try again." },
-//         { status: 429 }
-//       );
-//     }
-
-//     return NextResponse.json(
-//       { error: err.message || "Server error" },
-//       { status: 500 }
-//     );
-//   }
-// }
 
 export async function POST(req: NextRequest) {
   try {
+
+    const { searchParams } = new URL(req.url);
+    const page = Number(searchParams.get("page") ?? 0); // gets updated page number from loadMore() in page.tsx
+    const limit = Number(searchParams.get("limit") ?? 5); // number of results per page
+
     const body = await req.json();
 
     // checking if url is syntactically correct
@@ -186,7 +44,6 @@ export async function POST(req: NextRequest) {
     }
 
     console.log("Calling twitterapi.io:", rawUrl);
-
 
     // checking if the URL contains a tweet ID
     const tweetId = extractTweetId(rawUrl);
@@ -211,7 +68,6 @@ export async function POST(req: NextRequest) {
           { status: 404 }
         );
       }
-
     }
 
     // check if the tweet has retweeters
@@ -225,7 +81,20 @@ export async function POST(req: NextRequest) {
     }
 
     // grab 5-10 random users from retweets
-    const sampledUsers = retweeters ? sampleUsers(retweeters) : [];
+    // const sampledUsers = retweeters ? sampleUsers(retweeters) : [];
+
+    const start = page * limit;
+    const end = start + limit;
+
+    const usersPage = retweeters.slice(start, end); // pagination is array slicing
+
+    return NextResponse.json({
+      success: true,
+      users: usersPage,
+      hasMore: end < retweeters.length, // if end of the page is less than number of retweeters, there's still more to load
+      total: retweeters.length
+    });
+
 
     // grab recent posts of sampled retweeters
     // const feeds: UserAndMedia[] = [];
@@ -250,13 +119,13 @@ export async function POST(req: NextRequest) {
     //     console.warn(`Skipping user ${user.username}`, err);
     //   }
     // }
-
-    return NextResponse.json({
-        success: true,
-        tweet,
-        retweeterCount: retweeters.length,
-        sampledUsers,
-    });
+//----------
+    // return NextResponse.json({
+    //     success: true,
+    //     tweet,
+    //     retweeterCount: retweeters.length,
+    //     sampledUsers,
+    // });
   } catch (err: any) {
     console.error(err);
 
