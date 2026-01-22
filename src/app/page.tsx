@@ -31,7 +31,7 @@ export default function Home() {
     console.log("API response:", data);
     
     const feedMap = new Map<string, any[]>(
-      (data.usersFeed ?? []).map((f: any) => [String(f.user_id), f.media] as [string, any[]])
+      (data.usersFeed ?? []).map((f: any) => [f.user_id, f.media] as [string, any[]])
     );
 
     console.log(feedMap);
@@ -65,7 +65,7 @@ export default function Home() {
     setFeeds((prev) => {
       const newMap = new Map(prev);
       (data.usersFeed ?? []).forEach((f: any) => {
-        newMap.set(String(f.user_id), f.media);
+        newMap.set(f.user_id, f.media);
       });
       return newMap;
     });
@@ -128,7 +128,7 @@ export default function Home() {
 
         <div className="grid gap-6 mt-6">
           {users.map((user) => (
-            <ProfileCard onClick={() => handleProfileClick(user)} key={user.id} user={user} media={feeds.get(String(user.id))}/>
+            <ProfileCard onClick={() => handleProfileClick(user)} key={user.id} user={user} media={feeds.get(user.id)}/>
           ))}
         </div>
 

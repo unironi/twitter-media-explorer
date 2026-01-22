@@ -12,13 +12,6 @@ export interface NormalizedTweet {
     reply_count?: number;
     quote_count?: number;
   };
-  // is_retweet: boolean;
-  // is_quote: boolean;
-
-  // // for media extraction
-  // media?: any[];
-  // retweetedTweet?: any;
-  // quotedTweet?: any;
 }
 
 
@@ -39,7 +32,11 @@ export interface TwitterUser {
 export interface TwitterUserMedia {
   id: string;
   url: string;
+  type: "video" | "animated_gif" | "photo" | "text";
   text: string;
+  image?: string;
+  video?: string;
+  gif?: string;
   public_metrics: {
     like_count: number;
     retweet_count: number;

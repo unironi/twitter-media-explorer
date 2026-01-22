@@ -75,9 +75,6 @@ export async function POST(req: NextRequest) {
       setCachedRetweeters(tweetId, retweeters);
     }
 
-    // grab 5-10 random users from retweets
-    // const sampledUsers = retweeters ? sampleUsers(retweeters) : [];
-
     // --- paginate retweeters so ~5 are returned at a time ---
     const { searchParams } = new URL(req.url);
     const page = Number(searchParams.get("page") ?? 0); // gets updated page number from loadMore() in page.tsx
@@ -93,12 +90,11 @@ export async function POST(req: NextRequest) {
       usersPage.map(async (user) => {
         const posts = await twitterClient.getUserTweets(user.id);
         return {
-          user_id: String(user.id),
+          user_id: user.id,
           media: posts,
         };
       })
     );
-
 
     return NextResponse.json({
       success: true,

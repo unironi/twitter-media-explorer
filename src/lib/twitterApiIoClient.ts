@@ -43,11 +43,6 @@ export class TwitterApiIoClient implements TwitterProvider {
         reply_count: t.replyCount,
         quote_count: t.quoteCount,
       },
-      // is_retweet: Boolean(t.isRetweet),
-      // is_quote: Boolean(t.isQuote),
-      // media: t.media,
-      // retweetedTweet: t.retweetedTweet,
-      // quotedTweet: t.quotedTweet,
     };
   }
 
@@ -93,19 +88,28 @@ export class TwitterApiIoClient implements TwitterProvider {
     }
 
     const json = await res.json();
-    return (json.data.tweets ?? []).map((t: any): TwitterUserMedia => ({
-      id: t.id,
-      url: t.url,
-      text: t.text,
-      public_metrics: {
-        like_count: t.likeCount,
-        retweet_count: t.retweetCount,
-        reply_count: t.replyCount,
-        quote_count: t.quoteCount,
-      },
-      created_at: t.createdAt,
-      is_reply: t.isReply,
-      is_retweet: t.retweeted_tweet ? true : false,
-    }));
+    return (json.data.tweets ?? []).map((t: any): TwitterUserMedia => {
+      const media = t.extendedEntities?.media?.[0];
+
+      return {
+        id: t.id,
+        url: t.url,
+        type: media? media.type : "text", // if extendedEntities is empty, there's only text in the og twt
+        text: t.text,
+        image: media? media.media_url_https : null, // both extendedEntities.media.type == "photo" or "video" have media_url_https with the image/thumbnail URL
+        video: media? media.video_info?.variants?.[3].url : null, // 4 different video variants, 4th version has highest bitrate and format video/mp4
+        gif: media? media.video_info?.variants?.[0].url : null, // animated gifs only have 1 variant
+        public_metrics: {
+          like_count: t.likeCount,
+          retweet_count: t.retweetCount,
+          reply_count: t.replyCount,
+          quote_count: t.quoteCount,
+        },
+        created_at: t.createdAt,
+        is_reply: t.isReply,
+        is_retweet: t.retweeted_tweet ? true : false,
+      }
+      
+    });
   }
 }
