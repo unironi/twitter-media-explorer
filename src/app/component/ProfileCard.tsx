@@ -1,26 +1,29 @@
-// components/ProfileCard.tsx
 import Image from "next/image";
+import { TwitterUser } from "@/lib/twitterProvider";
+import { MediaGrid } from "./MediaGrid";
 
-interface TwitterUser {
-  id: string;
-  username: string;
-  name?: string;
-  profile_image_url?: string;
-  public_metrics?: {
-    followers_count: number;
-    following_count: number;
-    tweet_count: number;
-  };
+interface ProfileCardProps {
+  user: TwitterUser;
+  media?: {
+    id: string;
+    text: string;
+    created_at: string;
+  }[];
+  onClick?: (user: TwitterUser) => void;
 }
 
-export function ProfileCard({ user }: { user: TwitterUser }) {
+
+export function ProfileCard({ user, media, onClick }: ProfileCardProps) {
   return (
-    <div className="rounded-xl border p-4 bg-white shadow-sm">
+    <div onClick={() => onClick?.(user)}
+      className="cursor-pointer rounded-xl border p-4 hover:bg-gray-50 transition"
+    >
       <div className="flex items-center gap-3">
         <a
           href={`https://x.com/${user.username}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
         >
           <Image
             src={user.profile_image_url || "/avatar-placeholder.png"}
@@ -37,6 +40,7 @@ export function ProfileCard({ user }: { user: TwitterUser }) {
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold hover:underline"
+            onClick={(e) => e.stopPropagation()}
           >
             @{user.username}
           </a>
@@ -53,18 +57,9 @@ export function ProfileCard({ user }: { user: TwitterUser }) {
         <span>{user.public_metrics?.tweet_count ?? 0} Tweets</span>
       </div>
 
-      {/* Media placeholder */}
-      <div className="mt-4 h-40 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
-        Media coming soon
-      </div>
+      <MediaGrid media={media ?? []} />
+      <button disabled className="mt-3 w-full rounded-lg border py-2 text-sm text-gray-400 cursor-not-allowed">View More</button>
 
-      {/* View More */}
-      <button
-        disabled
-        className="mt-3 w-full rounded-lg border py-2 text-sm text-gray-400 cursor-not-allowed"
-      >
-        View More
-      </button>
     </div>
   );
 }

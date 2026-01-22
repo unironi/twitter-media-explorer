@@ -12,6 +12,7 @@ export default function Home() {
   const [users, setUsers] = useState<TwitterUser[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [feeds, setFeeds] = useState<Map<string, any[]>>(new Map());
 
   async function handleSearch() {
     setLoading(true);
@@ -26,10 +27,18 @@ export default function Home() {
     });
 
     const data = await res.json();
+
     console.log("API response:", data);
+    
+    const feedMap = new Map<string, any[]>(
+      (data.usersFeed ?? []).map((f: any) => [String(f.user_id), f.media] as [string, any[]])
+    );
+
+    console.log(feedMap);
 
     setUsers(data.users ?? []);
     setHasMore(data.hasMore);
+    setFeeds(feedMap);
     setLoading(false);
   }
 
@@ -85,7 +94,7 @@ export default function Home() {
 
         <div className="grid gap-6 mt-6">
           {users.map((user) => (
-            <ProfileCard key={user.id} user={user} />
+            <ProfileCard onClick={handleSearch} key={user.id} user={user} media={feeds.get(String(user.id))}/>
           ))}
         </div>
 

@@ -1,6 +1,6 @@
 export interface NormalizedTweet {
   id: string;
-  createdAt: string;
+  created_at: string;
   author: {
     id: string;
     username: string;
@@ -12,13 +12,13 @@ export interface NormalizedTweet {
     reply_count?: number;
     quote_count?: number;
   };
-  isRetweet: boolean;
-  isQuote: boolean;
+  // is_retweet: boolean;
+  // is_quote: boolean;
 
-  // for media extraction
-  media?: any[];
-  retweetedTweet?: any;
-  quotedTweet?: any;
+  // // for media extraction
+  // media?: any[];
+  // retweetedTweet?: any;
+  // quotedTweet?: any;
 }
 
 
@@ -37,31 +37,27 @@ export interface TwitterUser {
 
 // retweeter's media
 export interface TwitterUserMedia {
-  tweetId: string;
-  mediaId: string;
-  type: "video" | "photo" | "animated_gif";
+  id: string;
   url: string;
-  preview?: string;
+  text: string;
   metrics: {
     like_count: number;
     retweet_count: number;
     reply_count?: number;
     quote_count?: number;
   };
-  createdAt: string;
-  author: {
-    id: string,
-    username: string,
-  }
+  created_at: string;
+  is_reply: boolean;
+  is_retweet: boolean;
 }
 
 export interface UserAndMedia {
-  user: TwitterUser;
+  user_id: string;
   media: TwitterUserMedia[];
 }
 
 export interface TwitterProvider {
   getTweetById(tweetId: string): Promise<NormalizedTweet>;
   getRetweeters(tweetId: string): Promise<TwitterUser[]>;
-  // getUserTweets(userId: string, userName: string, tweetsLimit: number, mediaLimit: number): Promise<UserAndMedia>;
+  getUserTweets(userId: string): Promise<TwitterUserMedia[]>;
 }

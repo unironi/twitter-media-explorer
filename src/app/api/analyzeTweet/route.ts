@@ -27,13 +27,9 @@ function extractTweetId(url: string): string | null {
 export async function POST(req: NextRequest) {
   try {
 
-    const { searchParams } = new URL(req.url);
-    const page = Number(searchParams.get("page") ?? 0); // gets updated page number from loadMore() in page.tsx
-    const limit = Number(searchParams.get("limit") ?? 5); // number of results per page
-
     const body = await req.json();
 
-    // checking if url is syntactically correct
+    // --- checking if url is syntactically correct ---
     const rawUrl = urlValid(body);
 
     if (!rawUrl) {
@@ -45,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     console.log("Calling twitterapi.io:", rawUrl);
 
-    // checking if the URL contains a tweet ID
+    // --- checking if the URL contains a tweet ID ---
     const tweetId = extractTweetId(rawUrl);
 
     if (!tweetId) {
@@ -55,7 +51,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // check if tweet exists (first in cache- otherwise fetch)
+    // --- check if tweet exists (first in cache- otherwise fetch) ---
     let tweet = getCachedTweet(tweetId);
 
     if (!tweet) {
@@ -70,11 +66,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // check if the tweet has retweeters
+    // --- check if the tweet has retweeters ---
     let retweeters = getCachedRetweeters(tweetId);
 
     if (!retweeters) {
-
       retweeters = await twitterClient.getRetweeters(tweetId);
       retweeters = retweeters ? retweeters : [];
       setCachedRetweeters(tweetId, retweeters);
@@ -83,49 +78,35 @@ export async function POST(req: NextRequest) {
     // grab 5-10 random users from retweets
     // const sampledUsers = retweeters ? sampleUsers(retweeters) : [];
 
+    // --- paginate retweeters so ~5 are returned at a time ---
+    const { searchParams } = new URL(req.url);
+    const page = Number(searchParams.get("page") ?? 0); // gets updated page number from loadMore() in page.tsx
+    const limit = Number(searchParams.get("limit") ?? 5); // number of results per page
+
     const start = page * limit;
     const end = start + limit;
 
     const usersPage = retweeters.slice(start, end); // pagination is array slicing
 
+    // --- get each user's posts to display in profile card ---
+    const feed: UserAndMedia[] = await Promise.all(
+      usersPage.map(async (user) => {
+        const posts = await twitterClient.getUserTweets(user.id);
+        return {
+          user_id: String(user.id),
+          media: posts,
+        };
+      })
+    );
+
+
     return NextResponse.json({
       success: true,
       users: usersPage,
       hasMore: end < retweeters.length, // if end of the page is less than number of retweeters, there's still more to load
-      total: retweeters.length
+      total: retweeters.length,
+      usersFeed: feed,
     });
-
-
-    // grab recent posts of sampled retweeters
-    // const feeds: UserAndMedia[] = [];
-
-    // for (const user of sampledUsers) {
-    //   try {
-    //     const feed = await twitterClient.getUserTweets(
-    //       user.id,
-    //       user.username,
-    //       100,
-    //       9
-    //     );
-
-    //     if (feed.media.length > 0) {
-    //       feeds.push(feed);
-    //     }
-    //     if (feed.media.length === 0) {
-    //       console.warn(`User ${user.username} has no media`);
-    //     }
-    //   } catch (err) {
-    //     // skip private / suspended / failed users
-    //     console.warn(`Skipping user ${user.username}`, err);
-    //   }
-    // }
-//----------
-    // return NextResponse.json({
-    //     success: true,
-    //     tweet,
-    //     retweeterCount: retweeters.length,
-    //     sampledUsers,
-    // });
   } catch (err: any) {
     console.error(err);
 
