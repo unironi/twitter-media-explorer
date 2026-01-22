@@ -101,29 +101,30 @@ export default function Home() {
   }
 
   const loadMoreRef = useInfiniteScroll(loadMore, hasMore, loading);
-
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="mx-auto max-w-md space-y-4">
-        <h1 className="text-xl font-semibold text-gray-900">
-          Twitter Media Explorer
-        </h1>
+        <div className="sticky top-0 bg-gray-50 z-10 pb-4 pt-4">
+          <h1 className="text-xl font-semibold text-gray-900">
+            Twitter Media Explorer
+          </h1>
 
-        <input
-          type="text"
-          placeholder="Paste Twitter/X post URL"
-          value={tweetUrl}
-          onChange={(e) => setTweetUrl(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
-        />
+          <input
+            type="text"
+            placeholder="Paste Twitter/X post URL"
+            value={tweetUrl}
+            onChange={(e) => setTweetUrl(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+          />
 
-        <button
-          onClick={() => handleSearch(tweetUrl)}
-          disabled={loading}
-          className="w-full rounded-lg bg-black py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {loading ? "Loading..." : "Search"}
-        </button>
+          <button
+            onClick={() => handleSearch(tweetUrl)}
+            disabled={loading}
+            className="w-full rounded-lg bg-black py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {loading ? "Loading..." : "Search"}
+          </button>
+        </div>
 
         <div className="grid gap-6 mt-6">
           {users.map((user) => (
@@ -150,4 +151,7 @@ export default function Home() {
       </div>
     </main>
   );
+
 }
+
+
