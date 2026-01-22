@@ -97,7 +97,7 @@ export class TwitterApiIoClient implements TwitterProvider {
       id: t.id,
       url: t.url,
       text: t.text,
-      metrics: {
+      public_metrics: {
         like_count: t.likeCount,
         retweet_count: t.retweetCount,
         reply_count: t.replyCount,

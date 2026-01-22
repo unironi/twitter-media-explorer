@@ -40,7 +40,7 @@ export interface TwitterUserMedia {
   id: string;
   url: string;
   text: string;
-  metrics: {
+  public_metrics: {
     like_count: number;
     retweet_count: number;
     reply_count?: number;

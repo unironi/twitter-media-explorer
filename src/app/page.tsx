@@ -14,7 +14,7 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(true);
   const [feeds, setFeeds] = useState<Map<string, any[]>>(new Map());
 
-  async function handleSearch() {
+  async function handleSearch(searchUrl: string) {
     setLoading(true);
     setUsers([]);
     setPage(0);
@@ -23,7 +23,7 @@ export default function Home() {
     const res = await fetch("/api/analyzeTweet", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tweetUrl }),
+      body: JSON.stringify({ tweetUrl: searchUrl }),
     });
 
     const data = await res.json();
@@ -61,10 +61,43 @@ export default function Home() {
 
     const data = await res.json();
 
-    setUsers((prev) => [...prev, ...(data.users ?? [])]);
+    setUsers((prev) => [...prev, ...(data.users ?? [])]); // add more users without reloading 
+    setFeeds((prev) => {
+      const newMap = new Map(prev);
+      (data.usersFeed ?? []).forEach((f: any) => {
+        newMap.set(String(f.user_id), f.media);
+      });
+      return newMap;
+    });
     setHasMore(data.hasMore);
     setPage(nextPage);
     setLoading(false);
+  }
+
+  async function handleProfileClick(user: TwitterUser) {
+    const userPosts = feeds.get(user.id);
+    if (!userPosts || userPosts.length === 0) return;
+
+    // many retweeter's most recent tweet is another retweet that belongs
+    // to someone else- this filtering ensures we're recursing on an original
+    // tweet/quote/reply by the retweeter when we click on their profile
+
+    // first try finding posts that have retweets
+    const candidate = userPosts.find(t => !t.is_retweet && t.public_metrics?.retweet_count > 0)
+    ?? userPosts.find(t => !t.is_retweet)
+    ?? null;
+
+    if (!candidate) {
+      console.log("No viable tweet to recurse on");
+      return;
+    }
+
+    console.log(candidate);
+
+    const newTweetUrl = `https://x.com/${user.username}/status/${candidate.id}`;
+
+    setTweetUrl(newTweetUrl);
+    handleSearch(newTweetUrl);
   }
 
   const loadMoreRef = useInfiniteScroll(loadMore, hasMore, loading);
@@ -85,7 +118,7 @@ export default function Home() {
         />
 
         <button
-          onClick={handleSearch}
+          onClick={() => handleSearch(tweetUrl)}
           disabled={loading}
           className="w-full rounded-lg bg-black py-2 text-sm font-medium text-white disabled:opacity-50"
         >
@@ -94,7 +127,7 @@ export default function Home() {
 
         <div className="grid gap-6 mt-6">
           {users.map((user) => (
-            <ProfileCard onClick={handleSearch} key={user.id} user={user} media={feeds.get(String(user.id))}/>
+            <ProfileCard onClick={() => handleProfileClick(user)} key={user.id} user={user} media={feeds.get(String(user.id))}/>
           ))}
         </div>
 
