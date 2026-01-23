@@ -8,12 +8,12 @@ import type { UserAndMedia } from "@/lib/twitterProvider";
 
 const twitterClient = new TwitterApiIoClient();
 
-// function to check if url is valid string
+// helper function to check if url is valid string
 function urlValid(body: any): string {
   return typeof body.tweetUrl === "string" ? body.tweetUrl.trim() : "";
 }
 
-// function to parse tweet ID
+// helper function to parse tweet ID
 function extractTweetId(url: string): string | null {
   try {
     const parsed = new URL(url);
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     // --- get each user's posts to display in profile card ---
     const feed: UserAndMedia[] = await Promise.all(
       usersPage.map(async (user) => {
-        const posts = await twitterClient.getUserTweets(user.id);
+        const posts = (await twitterClient.getUserTweets(user.id)).media; // getUserTweets returns timeline containing media (20 results per page) and cursor (pagination)
         return {
           user_id: user.id,
           media: posts,

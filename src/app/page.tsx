@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { ProfileCard } from "./component/ProfileCard";
+import { ViewMoreModal } from "./component/ViewMoreModal";
 import { TwitterUser } from "@/lib/twitterProvider";
 import { useInfiniteScroll } from "./hooks/infiniteScroll";
-
+import { resetSeenMedia, filterNewMedia } from "@/lib/mediaDedup";
 
 export default function Home() {
   type UiError =
@@ -14,13 +15,14 @@ export default function Home() {
   | { type: "media"; message: string };
 
   const [error, setError] = useState<UiError | null>(null);
-
   const [tweetUrl, setTweetUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<TwitterUser[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [feeds, setFeeds] = useState<Map<string, any[]>>(new Map());
+  const [viewMoreUser, setViewMoreUser] = useState<TwitterUser | null>(null);
+
 
   function isValidTweetUrl(url: string) {
     try {
@@ -31,9 +33,15 @@ export default function Home() {
     }
   }
 
+  function filterNewMedia(media: any[]) {
+    return media.filter(
+      (m) => !m.is_retweet || m.is_quote_with_media
+    );
+  }
+
 
   async function handleSearch(searchUrl: string) {
-
+    resetSeenMedia(); // reset dedup on new search
     setLoading(true);
     setUsers([]);
     setPage(0);
@@ -84,10 +92,20 @@ export default function Home() {
 
 
     console.log("API response:", data);
-    
+
     const feedMap = new Map<string, any[]>(
-      (data.usersFeed ?? []).map((f: any) => [f.user_id, f.media] as [string, any[]])
+      (data.usersFeed ?? [])
+        .map((f: any) => {
+          const newMedia = filterNewMedia(f.media);
+          return [f.user_id, newMedia] as [string, any[]];
+        })
+        .filter(([, media]: [string, any[]]) => media.length > 0)
     );
+
+    
+    // const feedMap = new Map<string, any[]>(
+    //   (data.usersFeed ?? []).map((f: any) => [f.user_id, f.media] as [string, any[]])
+    // );
 
     console.log(feedMap);
 
@@ -120,7 +138,8 @@ export default function Home() {
     setFeeds((prev) => {
       const newMap = new Map(prev);
       (data.usersFeed ?? []).forEach((f: any) => {
-        newMap.set(f.user_id, f.media);
+        //newMap.set(f.user_id, f.media);
+        newMap.set(f.user_id, filterNewMedia(f.media));
       });
       return newMap;
     });
@@ -159,7 +178,7 @@ export default function Home() {
     handleSearch(newTweetUrl);
   }
 
-  const loadMoreRef = useInfiniteScroll(loadMore, hasMore, loading);
+  //const loadMoreRef = useInfiniteScroll(loadMore, hasMore, loading);
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-6">
@@ -168,6 +187,12 @@ export default function Home() {
           <h1 className="text-xl font-semibold text-gray-900">
             Twitter Media Explorer
           </h1>
+
+           {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 mt-4 mb-4 text-sm text-red-700">
+                {error.message}
+              </div>
+            )}
 
           <input
             type="text"
@@ -186,16 +211,17 @@ export default function Home() {
           </button>
         </div>
 
-        {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error.message}
-          </div>
+        {viewMoreUser && (
+          <ViewMoreModal
+            user={viewMoreUser}
+            onClose={() => setViewMoreUser(null)}
+          />
         )}
 
 
         <div className="grid gap-6 mt-6">
           {users.map((user) => (
-            <ProfileCard onClick={() => handleProfileClick(user)} key={user.id} user={user} media={feeds.get(user.id) ?? []}/>
+            <ProfileCard onClick={() => handleProfileClick(user)} onViewMore={() => setViewMoreUser(user)} key={user.id} user={user} media={feeds.get(user.id) ?? []}/>
           ))}
         </div>
 

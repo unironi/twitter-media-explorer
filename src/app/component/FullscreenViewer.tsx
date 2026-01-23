@@ -41,6 +41,18 @@ export function FullscreenMediaViewer({
 
       {/* media */}
       <div className="flex-1 flex items-center justify-center">
+
+        {media.type === "text" && (
+          <div
+            className="bg-white rounded-xl max-w-md w-full p-4 mr-4 ml-4 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-sm text-gray-900 whitespace-pre-wrap">
+              {media.text}
+            </p>
+          </div>
+        )}
+
         {media.type === "photo" && media.image && (
           <img
             src={media.image}

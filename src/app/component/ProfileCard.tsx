@@ -8,11 +8,13 @@ interface ProfileCardProps {
   user: TwitterUser;
   media: TwitterUserMedia[];
   onClick?: (user: TwitterUser) => void;
+  onViewMore: () => void
 }
 
 
-export function ProfileCard({ user, media, onClick }: ProfileCardProps) {
+export function ProfileCard({ user, media, onClick, onViewMore }: ProfileCardProps) {
   const [activeMedia, setActiveMedia] = useState<TwitterUserMedia | null>(null);
+
 
   return (
     <div onClick={() => onClick?.(user)}
@@ -57,8 +59,22 @@ export function ProfileCard({ user, media, onClick }: ProfileCardProps) {
         <span>{user.public_metrics?.tweet_count ?? 0} Tweets</span>
       </div>
 
-      <MediaGrid media={media} onMediaClick={(item) => setActiveMedia(item)} />
-      <button disabled className="mt-3 w-full rounded-lg border py-2 text-sm text-gray-400 cursor-not-allowed">View More</button>
+      {media.length === 0 && (
+        <p className="mt-2 text-xs text-gray-400">
+          No new media found
+        </p>
+      )}
+
+      {media.length != 0 && (
+        <MediaGrid media={media} onMediaClick={(item) => setActiveMedia(item)} />
+      )}
+      
+      <button 
+      onClick={(e) => {e.stopPropagation(); onViewMore();}}
+      hidden={media.length === 0}
+      className="mt-3 w-full rounded-lg border py-2 text-sm text-white bg-gray-600 cursor-not-allowed">
+        View More
+      </button>
 
       {activeMedia && (
         <FullscreenMediaViewer

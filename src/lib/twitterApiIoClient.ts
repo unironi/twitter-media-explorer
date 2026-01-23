@@ -74,9 +74,9 @@ export class TwitterApiIoClient implements TwitterProvider {
     }));
   }
 
-  async getUserTweets(userId: string) {
+  async getUserTweets(userId: string, cursor: string = "") {
     const res = await rateLimitedFetch(
-      `${BASE_URL}/user/last_tweets?userId=${userId}`, // last_tweets returns 20 tweets per page
+      `${BASE_URL}/user/last_tweets?userId=${userId}&cursor=${encodeURIComponent(cursor)}`, // last_tweets returns 20 tweets per page
       {
         headers: { "X-API-Key": API_KEY },
       }
@@ -88,10 +88,10 @@ export class TwitterApiIoClient implements TwitterProvider {
     }
 
     const json = await res.json();
-    return (json.data.tweets ?? []).map((t: any): TwitterUserMedia => {
+    const tweets = (json.data.tweets ?? []).map((t: any): TwitterUserMedia => {
       const media = t.extendedEntities?.media?.[0];
       let image = media? media.media_url_https : null;
-      let video = media? media.video_info?.variants?.[3].url : null;
+      let video = media? media.video_info?.variants?.[0].url : null;
       let gif = media? media.video_info?.variants?.[0].url : null;
 
       return {
@@ -114,5 +114,10 @@ export class TwitterApiIoClient implements TwitterProvider {
       }
       
     });
+
+    return {
+      media: tweets,
+      next_cursor: json.next_cursor ?? null
+    }
   }
 }

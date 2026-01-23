@@ -53,8 +53,13 @@ export interface UserAndMedia {
   media: TwitterUserMedia[];
 }
 
+export interface UserMediaTimeline {
+  media: TwitterUserMedia[];
+  next_cursor: string | null
+}
+
 export interface TwitterProvider {
   getTweetById(tweetId: string): Promise<NormalizedTweet>;
   getRetweeters(tweetId: string): Promise<TwitterUser[]>;
-  getUserTweets(userId: string): Promise<TwitterUserMedia[]>;
+  getUserTweets(userId: string, cursor: string): Promise<UserMediaTimeline>;
 }
