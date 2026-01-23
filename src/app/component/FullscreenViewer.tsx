@@ -54,14 +54,14 @@ export function FullscreenMediaViewer({
         )}
 
         {media.type === "photo" && media.image && (
-          <img
-            src={media.image}
-            alt=""
-            className="max-h-full max-w-full object-contain"
-          />
+          <div className="flex items-center justify-center max-h-[70vh]">
+            <img
+              src={media.image}
+              alt=""
+              className="max-h-[70vh] max-w-full object-contain"
+            />
+          </div>
         )}
-
-        
 
         {(media.type === "video" || media.type === "animated_gif") && (
           <div className="relative max-h-full max-w-full">
