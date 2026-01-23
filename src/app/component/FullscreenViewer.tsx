@@ -61,46 +61,47 @@ export function FullscreenMediaViewer({
           />
         )}
 
+        
+
         {(media.type === "video" || media.type === "animated_gif") && (
-            <div className="relative max-h-full max-w-full">
-                {/* thumbnail */}
-                {media.image && (
-                <img
-                    src={media.image}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-contain"
-                />
-                )}
+          <div className="relative max-h-full max-w-full">
+              {/* thumbnail */}
+              {media.image && (
+              <img
+                  src={media.image}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-contain"
+              />
+              )}
 
-                {/* video */}
-                <video
-                src={media.type === "video" ? media.video : media.gif}
-                onError={() => setMediaError(true)}
-                muted={media.type === "animated_gif"}
-                autoPlay
-                loop={media.type === "animated_gif"}
-                playsInline
-                controls={media.type === "video"}
-                preload="metadata"
-                className="relative z-10 max-h-full max-w-full"
-                />
-            </div>
+              {/* video */}
+              <video
+              src={media.type === "video" ? media.video : media.gif}
+              onError={() => setMediaError(true)}
+              muted={media.type === "animated_gif"}
+              autoPlay
+              loop={media.type === "animated_gif"}
+              playsInline
+              controls={media.type === "video"}
+              preload="metadata"
+              className="relative z-10 max-h-full max-w-full"
+              />
+
+              {mediaError && (
+              <div className="z-20 absolute inset-0 flex flex-col items-center justify-center text-white text-sm bg-black/70">
+                  <p className="mb-2">This video can’t be played here.</p>
+                  <a
+                  href={media.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                  >
+                  Open in X
+                  </a>
+              </div>
+              )}
+          </div>
         )}
-
-        {mediaError && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-sm bg-black/70">
-                <p className="mb-2">This video can’t be played here.</p>
-                <a
-                href={media.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-                >
-                Open in X
-                </a>
-            </div>
-        )}
-
       </div>
 
       {/* metadata */}
