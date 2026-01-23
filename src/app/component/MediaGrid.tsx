@@ -1,17 +1,12 @@
+import { TwitterUserMedia } from "@/lib/twitterProvider";
+
 interface MediaGridProps {
-  media: {
-    id: string;
-    type: "photo" | "video" | "animated_gif" | "text";
-    image?: string;
-    video?: string;
-    gif?: string;
-    text: string;
-    created_at: string;
-  }[];
+  media: TwitterUserMedia[];
+  onMediaClick: (media: TwitterUserMedia) => void;
 }
 
+export function MediaGrid({ media, onMediaClick }: MediaGridProps) {
 
-export function MediaGrid({ media }: MediaGridProps) {
   if (!media.length) {
     return (
       <div className="mt-4 h-40 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
@@ -40,7 +35,8 @@ export function MediaGrid({ media }: MediaGridProps) {
       {sorted.slice(0, 9).map((post) => (
         <div
           key={post.id}
-          className="relative aspect-square overflow-hidden rounded bg-black"
+          onClick={() => onMediaClick(post)}
+          className="relative aspect-square overflow-hidden rounded bg-black cursor-pointer"
         >
           {/* VIDEO */}
           {post.type === "video" && post.video && (

@@ -120,7 +120,7 @@ export default function Home() {
           <button
             onClick={() => handleSearch(tweetUrl)}
             disabled={loading}
-            className="w-full rounded-lg bg-black py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="w-full rounded-lg bg-black py-2 mt-4 text-sm font-medium text-white disabled:opacity-50"
           >
             {loading ? "Loading..." : "Search"}
           </button>
@@ -128,7 +128,7 @@ export default function Home() {
 
         <div className="grid gap-6 mt-6">
           {users.map((user) => (
-            <ProfileCard onClick={() => handleProfileClick(user)} key={user.id} user={user} media={feeds.get(user.id)}/>
+            <ProfileCard onClick={() => handleProfileClick(user)} key={user.id} user={user} media={feeds.get(user.id) ?? []}/>
           ))}
         </div>
 

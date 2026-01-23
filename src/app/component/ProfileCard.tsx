@@ -1,19 +1,19 @@
 import Image from "next/image";
-import { TwitterUser } from "@/lib/twitterProvider";
+import { TwitterUser, TwitterUserMedia } from "@/lib/twitterProvider";
 import { MediaGrid } from "./MediaGrid";
+import { FullscreenMediaViewer } from "./FullscreenViewer";
+import { useState } from "react";
 
 interface ProfileCardProps {
   user: TwitterUser;
-  media?: {
-    id: string;
-    text: string;
-    created_at: string;
-  }[];
+  media: TwitterUserMedia[];
   onClick?: (user: TwitterUser) => void;
 }
 
 
 export function ProfileCard({ user, media, onClick }: ProfileCardProps) {
+  const [activeMedia, setActiveMedia] = useState<TwitterUserMedia | null>(null);
+
   return (
     <div onClick={() => onClick?.(user)}
       className="cursor-pointer rounded-xl border p-4 hover:bg-gray-50 transition"
@@ -57,8 +57,15 @@ export function ProfileCard({ user, media, onClick }: ProfileCardProps) {
         <span>{user.public_metrics?.tweet_count ?? 0} Tweets</span>
       </div>
 
-      <MediaGrid media={media ?? []} />
+      <MediaGrid media={media} onMediaClick={(item) => setActiveMedia(item)} />
       <button disabled className="mt-3 w-full rounded-lg border py-2 text-sm text-gray-400 cursor-not-allowed">View More</button>
+
+      {activeMedia && (
+        <FullscreenMediaViewer
+          media={activeMedia}
+          onClose={() => setActiveMedia(null)}
+        />
+      )}
 
     </div>
   );

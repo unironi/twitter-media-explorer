@@ -90,15 +90,18 @@ export class TwitterApiIoClient implements TwitterProvider {
     const json = await res.json();
     return (json.data.tweets ?? []).map((t: any): TwitterUserMedia => {
       const media = t.extendedEntities?.media?.[0];
+      let image = media? media.media_url_https : null;
+      let video = media? media.video_info?.variants?.[3].url : null;
+      let gif = media? media.video_info?.variants?.[0].url : null;
 
       return {
         id: t.id,
         url: t.url,
         type: media? media.type : "text", // if extendedEntities is empty, there's only text in the og twt
         text: t.text,
-        image: media? media.media_url_https : null, // both extendedEntities.media.type == "photo" or "video" have media_url_https with the image/thumbnail URL
-        video: media? media.video_info?.variants?.[3].url : null, // 4 different video variants, 4th version has highest bitrate and format video/mp4
-        gif: media? media.video_info?.variants?.[0].url : null, // animated gifs only have 1 variant
+        image, // both extendedEntities.media.type == "photo" or "video" have media_url_https with the image/thumbnail URL
+        video, // 4 different video variants, 4th version has highest bitrate and format video/mp4
+        gif, // animated gifs only have 1 variant
         public_metrics: {
           like_count: t.likeCount,
           retweet_count: t.retweetCount,
