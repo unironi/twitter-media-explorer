@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { TwitterUserMedia } from "@/lib/twitterProvider";
 
 interface FullscreenMediaViewerProps {
@@ -10,6 +10,9 @@ export function FullscreenMediaViewer({
   media,
   onClose,
 }: FullscreenMediaViewerProps) {
+
+    const [mediaError, setMediaError] = useState(false);
+
   // prevent background scroll
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -60,6 +63,7 @@ export function FullscreenMediaViewer({
                 {/* video */}
                 <video
                 src={media.type === "video" ? media.video : media.gif}
+                onError={() => setMediaError(true)}
                 muted={media.type === "animated_gif"}
                 autoPlay
                 loop={media.type === "animated_gif"}
@@ -70,6 +74,21 @@ export function FullscreenMediaViewer({
                 />
             </div>
         )}
+
+        {mediaError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-sm bg-black/70">
+                <p className="mb-2">This video can’t be played here.</p>
+                <a
+                href={media.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+                >
+                Open in X
+                </a>
+            </div>
+        )}
+
       </div>
 
       {/* metadata */}

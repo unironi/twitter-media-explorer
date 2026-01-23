@@ -7,6 +7,14 @@ import { useInfiniteScroll } from "./hooks/infiniteScroll";
 
 
 export default function Home() {
+  type UiError =
+  { type: "input"; message: string }
+  | { type: "search"; message: string }
+  | { type: "profile"; message: string }
+  | { type: "media"; message: string };
+
+  const [error, setError] = useState<UiError | null>(null);
+
   const [tweetUrl, setTweetUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<TwitterUser[]>([]);
@@ -14,11 +22,32 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(true);
   const [feeds, setFeeds] = useState<Map<string, any[]>>(new Map());
 
+  function isValidTweetUrl(url: string) {
+    try {
+      const u = new URL(url);
+      return /twitter\.com|x\.com/.test(u.hostname) && /status\/\d+/.test(u.pathname);
+    } catch {
+      return false;
+    }
+  }
+
+
   async function handleSearch(searchUrl: string) {
+
     setLoading(true);
     setUsers([]);
     setPage(0);
     setHasMore(true);
+    setError(null);
+
+    if (!isValidTweetUrl(searchUrl)) { // url error handling
+      setError({
+        type: "input",
+        message: "Please enter a valid Twitter/X post URL.",
+      });
+      setLoading(false);
+      return;
+    }
 
     const res = await fetch("/api/analyzeTweet", {
       method: "POST",
@@ -27,6 +56,32 @@ export default function Home() {
     });
 
     const data = await res.json();
+
+    if (!res.ok) { // invalid tweet id error handling
+      setError({
+        type: "search",
+        message: data.error ?? "Tweet not found or unavailable.",
+      });
+      setLoading(false);
+      return;
+    }
+
+    if ((data.users ?? []).length === 0) { // no retweeters error handling
+      setError({
+        type: "search",
+        message: "No one has retweeted this post yet.",
+      });
+    }
+
+    if (res.status === 429) { // 429 returned from route.ts if rate limit reached
+      setError({
+        type: "search",
+        message: "Rate limit reached. Please wait a moment and try again.",
+      });
+      setLoading(false);
+      return;
+    }
+
 
     console.log("API response:", data);
     
@@ -87,8 +142,12 @@ export default function Home() {
     ?? userPosts.find(t => !t.is_retweet)
     ?? null;
 
-    if (!candidate) {
-      console.log("No viable tweet to recurse on");
+    if (!candidate) { // error handling for when clicked user doesnt have original tweets
+      setError({
+        type: "profile",
+        message:
+          "This user doesn’t have an original or quoted tweet to explore.",
+      });
       return;
     }
 
@@ -101,6 +160,7 @@ export default function Home() {
   }
 
   const loadMoreRef = useInfiniteScroll(loadMore, hasMore, loading);
+
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="mx-auto max-w-md space-y-4">
@@ -126,6 +186,13 @@ export default function Home() {
           </button>
         </div>
 
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error.message}
+          </div>
+        )}
+
+
         <div className="grid gap-6 mt-6">
           {users.map((user) => (
             <ProfileCard onClick={() => handleProfileClick(user)} key={user.id} user={user} media={feeds.get(user.id) ?? []}/>
@@ -133,7 +200,7 @@ export default function Home() {
         </div>
 
         <button
-          hidden={!hasMore}
+          hidden={!hasMore || users.length === 0}
           onClick={loadMore}
           disabled={loading}
           className="mt-6 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
