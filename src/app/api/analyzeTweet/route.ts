@@ -98,6 +98,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      id: tweet.id,
       users: usersPage,
       hasMore: end < retweeters.length, // if end of the page is less than number of retweeters, there's still more to load
       total: retweeters.length,

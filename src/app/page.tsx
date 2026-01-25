@@ -75,7 +75,12 @@ export default function Home() {
       return;
     }
 
-    if ((data.users ?? []).length === 0) { // no retweeters error handling
+    if ((data.id === "")) { // post's author is a protected account
+      setError({
+        type: "search",
+        message: "This account is protected",
+      });
+    } else if ((data.users ?? []).length === 0) { // if account public but no retweeters error handling
       setError({
         type: "search",
         message: "No one has retweeted this post yet.",
