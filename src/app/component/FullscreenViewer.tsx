@@ -21,13 +21,14 @@ export function FullscreenMediaViewer({
     };
   }, []);
 
-  if (media.video) {
-    media.video = media.video.split("?")[0];
-  }
+  // if (media.video) { // to remove tag parameter at very end of video URL to see if that would resolve the 403 forbidden error (it didn't)
+  //   media.video = media.video.split("?")[0];
+  //   //media.video = media.video.replace(/^(https:\/\/)/,"")
+  // }
 
-  if (media.gif) {
-    media.gif = media.gif.split("?")[0];
-  }
+  // if (media.gif) {
+  //   media.gif = media.gif.split("?")[0];
+  // }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={(e) => e.stopPropagation()}>
@@ -74,9 +75,11 @@ export function FullscreenMediaViewer({
               />
               )}
 
-              {/* video */}
+              {/* video or gif */}
+
               <video
-              src={media.type === "video" ? media.video : media.gif}
+              src={`/api/twitterVideo?url=${encodeURIComponent((media.type === "video" ? media.video : media.gif)!)}`}
+              /*src={media.type === "video" ? media.video : media.gif}*/
               onError={() => setMediaError(true)}
               muted={media.type === "animated_gif"}
               autoPlay

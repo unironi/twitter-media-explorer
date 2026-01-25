@@ -23,7 +23,7 @@ export default function Home() {
   const [feeds, setFeeds] = useState<Map<string, any[]>>(new Map());
   const [viewMoreUser, setViewMoreUser] = useState<TwitterUser | null>(null);
 
-
+  // helper function: checks if tweet is valid
   function isValidTweetUrl(url: string) {
     try {
       const u = new URL(url);
@@ -33,6 +33,7 @@ export default function Home() {
     }
   }
 
+  // helper function: just make sure that tweet isn't a retweet
   function filterNewMedia(media: any[]) {
     return media.filter(
       (m) => !m.is_retweet || m.is_quote_with_media

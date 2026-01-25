@@ -91,8 +91,25 @@ export class TwitterApiIoClient implements TwitterProvider {
     const tweets = (json.data.tweets ?? []).map((t: any): TwitterUserMedia => {
       const media = t.extendedEntities?.media?.[0];
       let image = media? media.media_url_https : null;
-      let video = media? media.video_info?.variants?.[0].url : null;
-      let gif = media? media.video_info?.variants?.[0].url : null;
+      // let video = media? media.video_info?.variants?.[0].url : null; // this is indexing content type application/x-mpegURL - may not be the right type
+      // let gif = media? media.video_info?.variants?.[0].url : null;
+
+      let video: string | undefined;
+      let gif: string | undefined;
+
+      if (media?.video_info?.variants) {
+        const mp4Variants = media.video_info.variants.filter( // filtering for video/mp4 not resolving 403 issue
+          (v: any) => v.content_type === "video/mp4"
+        );
+
+        const bestVariant = mp4Variants.sort(
+          (a: any, b: any) => (b.bitrate ?? 0) - (a.bitrate ?? 0)
+        )[0];
+
+        if (media.type === "video") video = bestVariant?.url;
+        if (media.type === "animated_gif") gif = bestVariant?.url;
+      }
+
 
       return {
         id: t.id,

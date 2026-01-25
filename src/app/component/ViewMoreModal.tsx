@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useInfiniteScroll } from "../hooks/infiniteScroll";
 import { TwitterUser } from "@/lib/twitterProvider";
+import { useAutoPauseVideo } from "../hooks/autoPauseVideo";
 
 interface ViewMoreModalProps {
   user: TwitterUser;
@@ -9,37 +10,27 @@ interface ViewMoreModalProps {
 
 // individual media card for timeline
 function MediaFeedItem({ item }: { item: any }) {
+
+const videoRef = useRef<HTMLVideoElement>(null);
+
+  useAutoPauseVideo(videoRef);
   return (
     <div className="border-b border-gray-200 py-4 px-2">
       {/* MEDIA */}
-      {item.video && (
-        <video
-          src={item.video}
-          poster={item.image}
-          controls
-          playsInline
-          className="w-full rounded-lg bg-black"
-        />
-      )}
 
-      {!item.video && item.gif && (
-        <video
-          src={item.gif}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full rounded-lg bg-black"
-        />
-      )}
-
-      {!item.video && !item.gif && item.image && (
-        <img
-          src={item.image}
-          alt=""
-          className="w-full rounded-lg object-cover"
-        />
-      )}
+      {(item.type === "video" || item.type === "animated_gif") && (
+            <video
+            ref={videoRef}
+            src={`/api/twitterVideo?url=${encodeURIComponent((item.type === "video" ? item.video : item.gif)!)}`}
+            muted={item.type === "animated_gif"}
+            autoPlay
+            loop={item.type === "animated_gif"}
+            playsInline
+            controls={item.type === "video"}
+            preload="metadata"
+            className="relative z-10 max-h-full max-w-full"
+            />
+        )}
 
       {/* TEXT-ONLY TWEET */}
       {!item.video && !item.gif && !item.image && (
@@ -104,7 +95,7 @@ export function ViewMoreModal({ user, onClose }: ViewMoreModalProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 z-50"
+      className="fixed inset-0 bg-black/70 z-50 h-full"
       onClick={onClose}
     >
       <div
