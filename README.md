@@ -28,7 +28,5 @@ I used twitterapi.io as a more cost-effective solution. The .env.local file is h
 - If you click on the "View More" button inside a profile card, it will show you most of the media timeline of the user.
 
 ### Some bugs at the moment:
-- Videos/GIFs are not playable inside the app at the moment, an error will redirect you to the actual tweet.
-- Accurate media retrieval and stats depends on API. Sometimes the media grids/timeline may look emptier than expected and this is something I am looking into.
-- Retweeter list may be shorter than the actual number of retweeters (could be API limitation)
+- Media retrieval inconsistency. Sometimes the media grids/timeline may look emptier than expected and this is something I am looking into.
 - Looking into whether my deduplication is working as intended
