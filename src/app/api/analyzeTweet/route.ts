@@ -18,11 +18,26 @@ function extractTweetId(url: string): string | null {
   try {
     const parsed = new URL(url);
     const match = parsed.pathname.match(/status\/(\d+)/);
+    console.log(match);
     return match ? match[1] : null;
   } catch {
     return null;
   }
 }
+
+// helper function to parse username
+function extractUsername(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const parts = parsed.pathname.split("/").filter(Boolean);
+
+    // /{username}/status/{tweetId}
+    return parts.length >= 2 ? parts[0] : "";
+  } catch {
+    return "";
+  }
+}
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,6 +66,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // --- check author status (protected/suspended/non-existent/public) ---
+    const author = extractUsername(rawUrl);
+    if (!author) {
+      return NextResponse.json(
+        { error: "Could not extract author username from URL" },
+        { status: 400 }
+      );
+    }
+
+    const authorStatus = (await twitterClient.getAuthorStatus(author)).status;
+
     // --- check if tweet exists (first in cache- otherwise fetch) ---
     let tweet = getCachedTweet(tweetId);
 
@@ -65,6 +91,7 @@ export async function POST(req: NextRequest) {
         );
       }
     }
+
 
     // --- check if the tweet has retweeters ---
     let retweeters = getCachedRetweeters(tweetId);
@@ -98,7 +125,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      id: tweet.id,
+      status: authorStatus,
       users: usersPage,
       hasMore: end < retweeters.length, // if end of the page is less than number of retweeters, there's still more to load
       total: retweeters.length,

@@ -1,3 +1,8 @@
+// getting status of author of pasted url of twitter post
+export interface Author {
+  status: string,
+}
+
 export interface NormalizedTweet {
   id: string;
   created_at: string;
@@ -59,6 +64,7 @@ export interface UserMediaTimeline {
 }
 
 export interface TwitterProvider {
+  getAuthorStatus(userName: string): Promise<Author>;
   getTweetById(tweetId: string): Promise<NormalizedTweet>;
   getRetweeters(tweetId: string): Promise<TwitterUser[]>;
   getUserTweets(userId: string, cursor: string): Promise<UserMediaTimeline>;

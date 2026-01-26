@@ -9,6 +9,30 @@ console.log("API KEY PRESENT:", Boolean(API_KEY));
 
 export class TwitterApiIoClient implements TwitterProvider {
 
+  async getAuthorStatus(userName: string) {
+    const res = await rateLimitedFetch(
+      `${BASE_URL}/user/info?userName=${userName}`,
+      {
+        headers: { "X-API-Key": API_KEY },
+      }
+    );
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`TwitterAPI.io error: ${text}`);
+    }
+
+    const json = await res.json();
+    const data = json.data;
+
+    // if data is null - user does not exist
+    // usually if data.unavailable = true, user is suspended
+    let status = data? (data.unavailable? "suspended" : (data.protected? "protected" : "public")) : "null";
+    return {
+      status
+    }
+  }
+
   async getTweetById(tweetId: string) {
     const res = await rateLimitedFetch(
       `${BASE_URL}/tweets?tweet_ids=${tweetId}`,
@@ -45,7 +69,6 @@ export class TwitterApiIoClient implements TwitterProvider {
       },
     };
   }
-
 
   async getRetweeters(tweetId: string) {
     const res = await rateLimitedFetch(
@@ -137,4 +160,5 @@ export class TwitterApiIoClient implements TwitterProvider {
       next_cursor: json.next_cursor ?? null
     }
   }
+
 }

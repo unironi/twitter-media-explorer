@@ -75,12 +75,22 @@ export default function Home() {
       return;
     }
 
-    if ((data.id === "")) { // post's author is a protected account
+    if (data.status === "null") { // account does not exist
+      setError({
+        type: "search",
+        message: "This account does not exist",
+      });
+    } else if (data.status === "protected") { // post's author is a protected account
       setError({
         type: "search",
         message: "This account is protected",
       });
-    } else if ((data.users ?? []).length === 0) { // if account public but no retweeters error handling
+    } else if (data.status === "suspended") { // account is unavailable for other reasons e.g. suspended accounts
+      setError({
+        type: "search",
+        message: "This account has been suspended",
+      });
+    } else if (data.status === "public" && (data.users ?? []).length === 0) { // if account public but no retweeters error handling
       setError({
         type: "search",
         message: "No one has retweeted this post yet.",
