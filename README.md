@@ -28,5 +28,5 @@ I used twitterapi.io as a more cost-effective solution. The .env.local file is h
 - If you click on the "View More" button inside a profile card, it will show you most of the media timeline of the user.
 
 ### Limitations:
-- Media retrieval is dependent on how often the user posts original media vs. retweets. The API can only fetch so many tweets at a time, so if a Twitter user mostly retweets and does not post much media within a time period, the media grid and timeline may be sparser than expected. As far as I know, there is no way to only fetch tweets containing media- each tweet needs to go through filtering/searching to check for media which is costly.
+- Media retrieval is dependent on how often the user posts original media vs. retweets. The API can only fetch so many tweets at a time, so if a Twitter user mostly retweets and does not post much media within a time period, the media grid and timeline may be sparser than expected. As far as I know, there is no way to only fetch tweets containing media- each tweet needs to go through filtering/searching to check for media which is costly. I may look into web scraping for this.
 - Looking into whether my deduplication is working as intended
